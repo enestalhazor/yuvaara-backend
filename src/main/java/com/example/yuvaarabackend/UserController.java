@@ -45,19 +45,19 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> Register(@NotBlank(message = "FullName cannot be empty") @RequestParam String fullname,
+    public ResponseEntity<?> register(@NotBlank(message = "FullName cannot be empty") @RequestParam String fullname,
                                       @NotBlank(message = "Email cannot be empty") @RequestParam String email,
                                       @NotBlank(message = "Phone cannot be empty") @RequestParam String phone,
                                       @NotBlank(message = "Password cannot be empty") @Size(min = 6, message = "Password should be more than 6 characters") @RequestParam String password,
                                       @NotBlank(message = "Address cannot be empty") @RequestParam String address,
                                       @RequestParam(value = "date_of_birth") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
-                                      @RequestParam(value = "profile_picture_url", required = false) MultipartFile profilePic) throws IOException {
+                                      @RequestParam(value = "profile_picture_url", required = false) MultipartFile profilePicUrl) throws IOException {
 
         try {
             String fileName = "";
-            if (profilePic != null && !profilePic.isEmpty()) {
+            if (profilePicUrl != null && !profilePicUrl.isEmpty()) {
 
-                String contentType = profilePic.getContentType();
+                String contentType = profilePicUrl.getContentType();
                 if (!"image/jpeg".equalsIgnoreCase(contentType)) {
                     return ResponseEntity.status(400).body(Map.of("info", "This is not JPEG file"));
                 }
@@ -65,9 +65,9 @@ public class UserController {
                 Path uploadDir = Paths.get(System.getProperty("user.dir"), "userphotos");
                 Files.createDirectories(uploadDir);
 
-                fileName = Paths.get(profilePic.getOriginalFilename()).getFileName().toString();
+                fileName = Paths.get(profilePicUrl.getOriginalFilename()).getFileName().toString();
                 Path uploadPath = uploadDir.resolve(fileName);
-                profilePic.transferTo(uploadPath.toFile());
+                profilePicUrl.transferTo(uploadPath.toFile());
             }
 
             if (email != null && !email.isBlank() && repository.checkIsEmailTaken(email)) {
@@ -97,7 +97,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> Login(@RequestBody LoginRequest request) throws NoSuchAlgorithmException {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) throws NoSuchAlgorithmException {
 
         if (request.getPassword() == null || request.getPassword().isBlank() ||
                 request.getEmail() == null || request.getEmail().isBlank()) {
@@ -135,7 +135,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> GetUserInfo(@PathVariable Integer id) throws NoSuchAlgorithmException {
+    public ResponseEntity<?> getUserInfo(@PathVariable Integer id) throws NoSuchAlgorithmException {
 
         if (!id.equals(RequestContext.getUserId())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("info", "Unauthorized"));
@@ -164,7 +164,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> EditUserInfo(@PathVariable Integer id,
+    public ResponseEntity<?> editUserInfo(@PathVariable Integer id,
                                           @RequestParam(value = "fullname", required = false) String name,
                                           @RequestParam(value = "email", required = false) String email,
                                           @RequestParam(value = "phone", required = false) String phone,

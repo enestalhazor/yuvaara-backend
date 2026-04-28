@@ -21,7 +21,7 @@ public class UserRepository {
         String sql = "SELECT COUNT(*) FROM users WHERE email=?";
         try {
             Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email);
-            return count != null && count > 0;
+            return count > 0;
         } catch (Exception e) {
             return false;
         }
