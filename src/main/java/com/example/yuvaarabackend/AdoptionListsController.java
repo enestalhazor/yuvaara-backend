@@ -28,19 +28,13 @@ public class AdoptionListsController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addList(@NotBlank(message = "Name cannot be empty") @RequestParam String name,
-            @NotBlank(message = "Species cannot be empty") @RequestParam String species,
-            @NotBlank(message = "Breed cannot be empty") @RequestParam String breed,
-            @NotNull(message = "Age cannot be empty") @RequestParam Integer age,
-            @NotBlank(message = "Gender cannot be empty") @RequestParam String gender,
-            @NotBlank(message = "Color cannot be empty") @RequestParam String color,
-            @NotBlank(message = "Status cannot be empty") @RequestParam String status,
-            @NotNull(message = "Photo URL cannot be empty") @RequestParam(value = "photo_url") MultipartFile photoUrl,
-            @NotBlank(message = "Location cannot be empty") @RequestParam String location
+    public ResponseEntity<?> addList(@NotBlank(message = "Name cannot be empty") @RequestParam String name, @NotBlank(message = "Species cannot be empty") @RequestParam String species,
+            @NotBlank(message = "Breed cannot be empty") @RequestParam String breed, @NotNull(message = "Age cannot be empty") @RequestParam Integer age, @NotBlank(message = "Gender cannot be empty") @RequestParam String gender,
+            @NotBlank(message = "Color cannot be empty") @RequestParam String color, @NotBlank(message = "Status cannot be empty") @RequestParam String status,
+            @NotNull(message = "Photo URL cannot be empty") @RequestParam(value = "photo_url") MultipartFile photoUrl, @NotBlank(message = "Location cannot be empty") @RequestParam String location
     ) throws IOException {
 
         Integer user_id = RequestContext.getUserId();
-
         if (user_id == null) {
             return ResponseEntity.status(401).body(Map.of("info", "Unauthorized"));
         }
@@ -63,15 +57,53 @@ public class AdoptionListsController {
 
         try {
 
-            if(repository.add(name, species, breed, age, gender, color, status, fileName, location))
+            if(repository.addList(user_id, name, species, breed, age, gender, color, status, fileName, location))
             {
                 return ResponseEntity.ok(Map.of("info", "List created"));
             }
 
-            return null;
+            return ResponseEntity.status(500).body(Map.of("info", "Failed to create list"));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(400).body(Map.of("info", "Bad request " + e.getMessage()));
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getLists() {
+
+        Integer userId = RequestContext.getUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("info", "Unauthorized"));
+        }
+
+        try {
+            List<Map<String, Object>> lists = repository.getLists();
+            if (lists.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("info", "No lists found"));
+            }
+            return ResponseEntity.ok(lists);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("info", "Internal server error"));
+        }
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<?> getListsByUserId() {
+
+        Integer userId = RequestContext.getUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("info", "Unauthorized"));
+        }
+
+        try {
+            List<Map<String, Object>> lists = repository.getListsByUserId(userId);
+            if (lists.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("info", "No lists found"));
+            }
+            return ResponseEntity.ok(lists);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("info", "Internal server error"));
         }
     }
 
@@ -82,6 +114,32 @@ public class AdoptionListsController {
             @RequestParam(required = false) String gender
     ) {
         List<Map<String, Object>> result = repository.filterLists(species, age, gender);
+
+        if(result.isEmpty())
+        {
+            return ResponseEntity.status(404).body(Map.of("info", "No lists found"));
+        }
+
         return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteListById(@PathVariable Integer id) {
+
+        Integer userId = RequestContext.getUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("info", "Unauthorized"));
+        }
+
+        try {
+            if (repository.deleteListById(id, userId)) {
+                return ResponseEntity.ok(Map.of("info", "List deleted"));
+            } else {
+                return ResponseEntity.status(404).body(Map.of("info", "Not found"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("info", "DB error"));
+        }
     }
 }

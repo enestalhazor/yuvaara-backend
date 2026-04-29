@@ -60,10 +60,10 @@ public class UserRepository {
     }
 
     public Integer getIdByEmail(String email) {
-
-        String sql = "SELECT id FROM users WHERE email=?";
+        String sql = "SELECT id FROM users WHERE email = ?";
         try {
-            return jdbcTemplate.queryForObject(sql, Integer.class, email);
+            List<Integer> results = jdbcTemplate.queryForList(sql, Integer.class, email);
+            return results.isEmpty() ? null : results.get(0);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

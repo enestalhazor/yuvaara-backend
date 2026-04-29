@@ -50,8 +50,8 @@ public class UserController {
                                       @NotBlank(message = "Phone cannot be empty") @RequestParam String phone,
                                       @NotBlank(message = "Password cannot be empty") @Size(min = 6, message = "Password should be more than 6 characters") @RequestParam String password,
                                       @NotBlank(message = "Address cannot be empty") @RequestParam String address,
-                                      @RequestParam(value = "date_of_birth") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
-                                      @RequestParam(value = "profile_picture_url", required = false) MultipartFile profilePicUrl) throws IOException {
+                                      @RequestParam(value = "dateOfBirth") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
+                                      @RequestParam(value = "profilePictureUrl", required = false) MultipartFile profilePicUrl) throws IOException {
 
         try {
             String fileName = "";
@@ -171,32 +171,35 @@ public class UserController {
                                           @RequestParam(value = "password", required = false) String password,
                                           @RequestParam(value = "address", required = false) String address,
                                           @RequestParam(value = "date_of_birth", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
-                                          @RequestParam(value = "profile_picture_url", required = false) MultipartFile profilePic) throws NoSuchAlgorithmException, IOException {
+                                          @RequestParam(value = "profilePictureUrl", required = false) MultipartFile profilePic) throws NoSuchAlgorithmException, IOException {
 
-        if (id != RequestContext.getUserId()) {
+        if (!Objects.equals(id, RequestContext.getUserId())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("info", "Unauthorized"));
         }
 
-        String fileName = null;
-        String hashedPassword = "";
-        if (profilePic != null && !profilePic.isEmpty()) {
+        try {
+            String fileName = null;
+            String hashedPassword = "";
+            if (profilePic != null && !profilePic.isEmpty()) {
 
-            String contentType = profilePic.getContentType();
-            if (!"image/jpeg".equalsIgnoreCase(contentType)) {
-                return ResponseEntity.status(400).body(Map.of("info", "This is not JPEG file"));
+                String contentType = profilePic.getContentType();
+                if (!"image/jpeg".equalsIgnoreCase(contentType)) {
+                    return ResponseEntity.status(400).body(Map.of("info", "This is not JPEG file"));
+                }
+
+                Path uploadDir = Paths.get(System.getProperty("user.dir"), "userphotos");
+                Files.createDirectories(uploadDir);
+
+                fileName = Paths.get(profilePic.getOriginalFilename()).getFileName().toString();
+                Path uploadPath = uploadDir.resolve(fileName);
+                profilePic.transferTo(uploadPath.toFile());
             }
 
-            Path uploadDir = Paths.get(System.getProperty("user.dir"), "productphotos");
-            Files.createDirectories(uploadDir);
-
-            fileName = Paths.get(profilePic.getOriginalFilename()).getFileName().toString();
-            Path uploadPath = uploadDir.resolve(fileName);
-            profilePic.transferTo(uploadPath.toFile());
-        }
-
-        try {
-            if (email != null && repository.checkIsEmailTaken(email)) {
-                return ResponseEntity.status(422).body(Map.of("info", "Email taken"));
+            if (email != null && !email.isBlank()) {
+                Integer ownerOfEmail = repository.getIdByEmail(email);
+                if (ownerOfEmail != null && !Objects.equals(id, ownerOfEmail)) {
+                    return ResponseEntity.status(409).body(Map.of("info", "Email already in use"));
+                }
             }
 
             if (email != null && !email.isBlank()) {
@@ -227,18 +230,11 @@ public class UserController {
                 return ResponseEntity.status(404).body(Map.of("info", "No user found for id: " + result));
             }
 
-            Integer userId = RequestContext.getUserId();
-            Integer userId2 = repository.getIdByEmail(email);
-
-            if (Objects.equals(userId, userId2)) {
-                return ResponseEntity.ok(Map.of("info", "User infos edited id: " + userId2));
-            }
-            return null;
+            return ResponseEntity.ok(Map.of("info", "User infos edited id: " + id));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Internal server error");
         }
     }
-
 }
 

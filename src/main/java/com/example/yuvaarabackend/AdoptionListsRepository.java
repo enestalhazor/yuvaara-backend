@@ -16,17 +16,38 @@ public class AdoptionListsRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public boolean add(String name, String species, String breed, Integer age, String gender, String color, String status, String photo_url, String location
+    public boolean addList(Integer userId, String name, String species, String breed, Integer age, String gender, String color, String status, String photoUrl, String location
     ) {
-
-        String sql = "INSERT INTO adoption_lists (name, species, breed, age, gender, color, status, photo_url, location) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO adoption_lists (user_id, name, species, breed, age, gender, color, status, photo_url, location) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
-            Integer rows = jdbcTemplate.update(sql, name, species, breed, age, gender, color, status, photo_url, location);
+            Integer rows = jdbcTemplate.update(sql, userId, name, species, breed, age, gender, color, status, photoUrl, location);
             return rows > 0;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public List<Map<String, Object>> getLists() {
+
+        String sql = "SELECT * FROM adoption_lists";
+        try {
+            return jdbcTemplate.queryForList(sql);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    public List<Map<String, Object>> getListsByUserId(Integer userId) {
+
+        String sql = "SELECT * FROM adoption_lists WHERE user_id = ?";
+        try {
+            return jdbcTemplate.queryForList(sql, userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
         }
     }
 
@@ -52,8 +73,18 @@ public class AdoptionListsRepository {
             sql.append(" AND gender = ?");
             params.add(gender);
         }
-
         return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+    }
+
+    public boolean deleteListById(Integer id, Integer userId) {
+        try{
+            String sql = "DELETE FROM adoption_lists WHERE id = ? AND user_id = ?";
+            return jdbcTemplate.update(sql, id, userId) > 0;
+        } catch(Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
 

@@ -2,12 +2,9 @@ package com.example.yuvaarabackend;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,16 +21,16 @@ public class AdoptionFormsController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addForm(@NotBlank(message = "FullName cannot be empty") @RequestParam String message, @NotNull(message = "Adoption list id cannot be empty") @RequestParam Integer adoption_list_id) throws IOException {
+    public ResponseEntity<?> addForm(@NotBlank(message = "Message cannot be empty") @RequestParam String message, @NotNull(message = "Adoption list id cannot be empty") @RequestParam Integer adoptionListId) throws IOException {
 
-        Integer user_id = RequestContext.getUserId();
+        Integer userId = RequestContext.getUserId();
 
-        if (user_id == null) {
+        if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("info", "Unauthorized"));
         }
 
         try {
-            if(repository.add(message, user_id, adoption_list_id))
+            if(repository.addForm(message, userId, adoptionListId))
             {
                 return ResponseEntity.ok(Map.of("info", "Form created"));
             }
@@ -48,38 +45,39 @@ public class AdoptionFormsController {
     @GetMapping
     public ResponseEntity<?> getForms() {
 
-        Integer id = RequestContext.getUserId();
-
-        if (id == null) {
+        Integer userId = RequestContext.getUserId();
+        if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("info", "Unauthorized"));
         }
 
         try {
-            List<Map<String, Object>> products = repository.forms();
-            if (products == null) {
+            List<Map<String, Object>> forms = repository.getForms(userId);
+            if (forms.isEmpty()) {
                 return ResponseEntity.status(404).body(Map.of("info", "No forms found"));
             }
-            return ResponseEntity.ok(products);
+            return ResponseEntity.ok(forms);
         } catch (Exception e) {
-            return ResponseEntity.status(404).body(Map.of("info", "Error fetching forms: " + e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("info", "Internal server error"));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteById(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteFormById(@NotNull(message = "Id cannot be empty") @PathVariable Integer id) {
 
-        if (id == null) {
+        Integer userId = RequestContext.getUserId();
+        if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("info", "Unauthorized"));
         }
+
         try {
-            if (repository.deleteFormById(id)) {
+            if (repository.deleteFormById(id, userId)) {
                 return ResponseEntity.ok(Map.of("info", "Form deleted"));
             } else {
                 return ResponseEntity.status(404).body(Map.of("info", "Not found"));
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(404).body(Map.of("info", "DB error"));
+            return ResponseEntity.status(500).body(Map.of("info", "DB error"));
         }
     }
 }
