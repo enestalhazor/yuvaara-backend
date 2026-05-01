@@ -73,9 +73,6 @@ public class AdoptionListsController {
     public ResponseEntity<?> getLists() {
 
         Integer userId = RequestContext.getUserId();
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("info", "Unauthorized"));
-        }
 
         try {
             List<Map<String, Object>> lists = repository.getLists();

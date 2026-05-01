@@ -54,7 +54,7 @@ public class UserController {
                                       @RequestParam(value = "profilePictureUrl", required = false) MultipartFile profilePicUrl) throws IOException {
 
         try {
-            String fileName = "";
+            String fileName = null;
             if (profilePicUrl != null && !profilePicUrl.isEmpty()) {
 
                 String contentType = profilePicUrl.getContentType();
@@ -175,6 +175,18 @@ public class UserController {
 
         if (!Objects.equals(id, RequestContext.getUserId())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("info", "Unauthorized"));
+        }
+
+        boolean nothingToUpdate = (name == null || name.isBlank()) &&
+                (email == null || email.isBlank()) &&
+                (phone == null || phone.isBlank()) &&
+                (password == null || password.isBlank()) &&
+                (address == null || address.isBlank()) &&
+                dateOfBirth == null &&
+                (profilePic == null || profilePic.isEmpty());
+
+        if (nothingToUpdate) {
+            return ResponseEntity.ok(Map.of("info", "Nothing to update"));
         }
 
         try {
