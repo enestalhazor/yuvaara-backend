@@ -51,29 +51,10 @@ public class AdoptionListsRepository {
         }
     }
 
-    public List<Map<String, Object>> filterLists(List<String> species, String age, String gender) {
-        StringBuilder sql = new StringBuilder("SELECT * FROM adoption_lists WHERE 1=1");
-        List<Object> params = new ArrayList<>();
+    public List<Map<String, Object>> filterLists(String term) {
+        String sql = "SELECT * FROM adoption_lists WHERE species= ?";
 
-        if (species != null && !species.isEmpty()) {
-            sql.append(" AND species = ANY(?)");
-            params.add(species.toArray(new String[0]));
-        }
-
-        if (age != null && !age.isEmpty()) {
-            switch (age) {
-                case "Puppy"  -> sql.append(" AND age BETWEEN 0 AND 1");
-                case "Young"  -> sql.append(" AND age BETWEEN 1 AND 3");
-                case "Adult"  -> sql.append(" AND age BETWEEN 3 AND 8");
-                case "Senior" -> sql.append(" AND age > 8");
-            }
-        }
-
-        if (gender != null && !gender.isEmpty()) {
-            sql.append(" AND gender = ?");
-            params.add(gender);
-        }
-        return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+        return jdbcTemplate.queryForList(sql, term);
     }
 
     public boolean deleteListById(Integer id, Integer userId) {

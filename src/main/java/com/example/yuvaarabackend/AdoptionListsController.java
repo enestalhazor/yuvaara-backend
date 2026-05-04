@@ -104,13 +104,9 @@ public class AdoptionListsController {
         }
     }
 
-    @GetMapping("/filter")
-    public ResponseEntity<?> filterLists(
-            @RequestParam(required = false) List<String> species,
-            @RequestParam(required = false) String age,
-            @RequestParam(required = false) String gender
-    ) {
-        List<Map<String, Object>> result = repository.filterLists(species, age, gender);
+    @GetMapping("/{term}")
+    public ResponseEntity<?> filterLists(@PathVariable String term) {
+        List<Map<String, Object>> result = repository.filterLists(term);
 
         if(result.isEmpty())
         {

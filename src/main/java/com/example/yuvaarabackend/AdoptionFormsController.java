@@ -53,7 +53,7 @@ public class AdoptionFormsController {
         try {
             List<Map<String, Object>> forms = repository.getForms(userId);
             if (forms.isEmpty()) {
-                return ResponseEntity.status(404).body(Map.of("info", "No forms found"));
+                return ResponseEntity.ok(List.of());
             }
             return ResponseEntity.ok(forms);
         } catch (Exception e) {
