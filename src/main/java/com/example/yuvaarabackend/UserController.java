@@ -58,8 +58,8 @@ public class UserController {
             if (profilePicUrl != null && !profilePicUrl.isEmpty()) {
 
                 String contentType = profilePicUrl.getContentType();
-                if (!"image/jpeg".equalsIgnoreCase(contentType)) {
-                    return ResponseEntity.status(400).body(Map.of("info", "This is not JPEG file"));
+                if (!contentType.startsWith("image/")) {
+                    return ResponseEntity.status(400).body(Map.of("info", "This is not an image file"));
                 }
 
                 Path uploadDir = Paths.get(System.getProperty("user.dir"), "userphotos");
@@ -78,7 +78,7 @@ public class UserController {
             }
 
             if (phone != null && !phone.isBlank()) {
-                if (!phone.matches("^\\+90 \\d{3} \\d{3} \\d{4}$")) {
+                if (!phone.matches("^\\+90 5\\d{2} \\d{3} \\d{4}$")) {
                     return ResponseEntity.status(400).body(Map.of("info", "Invalid phone format"));
                 }
             }
@@ -117,10 +117,10 @@ public class UserController {
                 return ResponseEntity.ok().header(HttpHeaders.AUTHORIZATION, token).body(responseBody);
             }
 
-            return ResponseEntity.status(404).body("User not found");
+            return ResponseEntity.status(404).body(Map.of("info", "User not found"));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Internal server error");
+            return ResponseEntity.status(500).body(Map.of("info", "Internal server error"));
         }
     }
 
@@ -159,7 +159,7 @@ public class UserController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Internal server error");
+            return ResponseEntity.status(500).body(Map.of("info","Internal server error"));
         }
     }
 
@@ -195,7 +195,7 @@ public class UserController {
             if (profilePic != null && !profilePic.isEmpty()) {
 
                 String contentType = profilePic.getContentType();
-                if (!"image/jpeg".equalsIgnoreCase(contentType)) {
+                if (!contentType.startsWith("image/")) {
                     return ResponseEntity.status(400).body(Map.of("info", "This is not JPEG file"));
                 }
 
@@ -245,7 +245,7 @@ public class UserController {
             return ResponseEntity.ok(Map.of("info", "User infos edited id: " + id));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Internal server error");
+            return ResponseEntity.status(500).body(Map.of("info", "Internal server error"));
         }
     }
 }

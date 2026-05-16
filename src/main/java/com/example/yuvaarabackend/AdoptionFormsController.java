@@ -38,7 +38,7 @@ public class AdoptionFormsController {
             return ResponseEntity.status(500).body(Map.of("info", "Form could not be created"));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(400).body(Map.of("info", "Bad request " + e.getMessage()));
+            return ResponseEntity.status(400).body(Map.of("info", "Bad request "));
         }
     }
 
