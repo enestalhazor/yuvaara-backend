@@ -45,11 +45,11 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> register(@NotBlank(message = "FullName cannot be empty") @RequestParam String fullname,
-                                      @NotBlank(message = "Email cannot be empty") @RequestParam String email,
-                                      @NotBlank(message = "Phone cannot be empty") @RequestParam String phone,
-                                      @NotBlank(message = "Password cannot be empty") @Size(min = 6, message = "Password should be more than 6 characters") @RequestParam String password,
-                                      @NotBlank(message = "Address cannot be empty") @RequestParam String address,
+    public ResponseEntity<?> register(@NotBlank(message = "Full name is required") @RequestParam String fullname,
+                                      @NotBlank(message = "Email is required") @RequestParam String email,
+                                      @NotBlank(message = "Phone is required") @RequestParam String phone,
+                                      @NotBlank(message = "Password is required") @Size(min = 6, message = "Password must be at least 6 characters") @RequestParam String password,
+                                      @NotBlank(message = "Address is required") @RequestParam String address,
                                       @RequestParam(value = "dateOfBirth") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
                                       @RequestParam(value = "profilePictureUrl", required = false) MultipartFile profilePicUrl) throws IOException {
 
@@ -59,7 +59,7 @@ public class UserController {
 
                 String contentType = profilePicUrl.getContentType();
                 if (!contentType.startsWith("image/")) {
-                    return ResponseEntity.status(400).body(Map.of("info", "This is not an image file"));
+                    return ResponseEntity.status(400).body(Map.of("info", "Please upload a valid image file"));
                 }
 
                 Path uploadDir = Paths.get(System.getProperty("user.dir"), "userphotos");
@@ -71,28 +71,28 @@ public class UserController {
             }
 
             if (email != null && !email.isBlank() && repository.checkIsEmailTaken(email)) {
-                return ResponseEntity.status(422).body(Map.of("info", "Email taken"));
+                return ResponseEntity.status(422).body(Map.of("info", "This email is already in use"));
             }
             if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
                 return ResponseEntity.status(400).body(Map.of("info", "Invalid email format"));
             }
 
             if (phone != null && !phone.isBlank()) {
-                if (!phone.matches("^\\+90 5\\d{2} \\d{3} \\d{4}$")) {
-                    return ResponseEntity.status(400).body(Map.of("info", "Invalid phone format"));
+                if (!phone.matches("^\\+905\\d{9}$")) {
+                    return ResponseEntity.status(400).body(Map.of("info", "Invalid phone format. Use +905XXXXXXXXX"));
                 }
             }
 
             String hashedPassword = HashService.hashPassword(password);
 
             if (repository.save(fullname, email, phone, hashedPassword, address, fileName, dateOfBirth)) {
-                return ResponseEntity.ok().body(Map.of("info", "User inserted"));
+                return ResponseEntity.ok().body(Map.of("info", "Registration successful"));
             } else {
-                return ResponseEntity.badRequest().body(Map.of("info", "Bad Request"));
+                return ResponseEntity.badRequest().body(Map.of("info", "Something went wrong, please try again"));
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(400).body(Map.of("info", "Bad request " + e.getMessage()));
+            return ResponseEntity.status(400).body(Map.of("info", "Something went wrong, please try again"));
         }
     }
 
@@ -101,7 +101,7 @@ public class UserController {
 
         if (request.getPassword() == null || request.getPassword().isBlank() ||
                 request.getEmail() == null || request.getEmail().isBlank()) {
-            return ResponseEntity.status(400).body(Map.of("info", "Missing required field or fields"));
+            return ResponseEntity.status(400).body(Map.of("info", "Email and password are required"));
         }
         try {
             String hashedPassword = HashService.hashPassword(request.getPassword());
@@ -117,10 +117,10 @@ public class UserController {
                 return ResponseEntity.ok().header(HttpHeaders.AUTHORIZATION, token).body(responseBody);
             }
 
-            return ResponseEntity.status(404).body(Map.of("info", "User not found"));
+            return ResponseEntity.status(404).body(Map.of("info", "Invalid email or password"));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("info", "Internal server error"));
+            return ResponseEntity.status(500).body(Map.of("info", "Something went wrong, please try again"));
         }
     }
 
@@ -146,7 +146,7 @@ public class UserController {
             var products = repository.userById(id);
 
             if (products == null || products.isEmpty()) {
-                return ResponseEntity.status(404).body(Map.of("info", "Not found user for id: " + id));
+                return ResponseEntity.status(404).body(Map.of("info", "User not found"));
             }
 
             Integer userid = RequestContext.getUserId();
@@ -159,7 +159,7 @@ public class UserController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("info","Internal server error"));
+            return ResponseEntity.status(500).body(Map.of("info", "Something went wrong, please try again"));
         }
     }
 
@@ -196,7 +196,7 @@ public class UserController {
 
                 String contentType = profilePic.getContentType();
                 if (!contentType.startsWith("image/")) {
-                    return ResponseEntity.status(400).body(Map.of("info", "This is not JPEG file"));
+                    return ResponseEntity.status(400).body(Map.of("info", "Please upload a valid image file"));
                 }
 
                 Path uploadDir = Paths.get(System.getProperty("user.dir"), "userphotos");
@@ -210,7 +210,7 @@ public class UserController {
             if (email != null && !email.isBlank()) {
                 Integer ownerOfEmail = repository.getIdByEmail(email);
                 if (ownerOfEmail != null && !Objects.equals(id, ownerOfEmail)) {
-                    return ResponseEntity.status(409).body(Map.of("info", "Email already in use"));
+                    return ResponseEntity.status(409).body(Map.of("info", "This email is already in use"));
                 }
             }
 
@@ -220,9 +220,9 @@ public class UserController {
                 }
             }
 
-            if ( password != null && !password.isBlank()) {
+            if (password != null && !password.isBlank()) {
                 if (password.length() < 6) {
-                    return ResponseEntity.status(400).body(Map.of("info", "Password length should be more than 6 character"));
+                    return ResponseEntity.status(400).body(Map.of("info", "Password must be at least 6 characters"));
                 }
             }
 
@@ -239,14 +239,13 @@ public class UserController {
             Integer result = repository.editUserInfo(id, name, email, phone, hashedPassword, address, dateOfBirth, fileName);
 
             if (result == -1 || result == null) {
-                return ResponseEntity.status(404).body(Map.of("info", "No user found for id: " + result));
+                return ResponseEntity.status(404).body(Map.of("info", "User not found"));
             }
 
-            return ResponseEntity.ok(Map.of("info", "User infos edited id: " + id));
+            return ResponseEntity.ok(Map.of("info", "Profile updated successfully"));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("info", "Internal server error"));
+            return ResponseEntity.status(500).body(Map.of("info", "Something went wrong, please try again"));
         }
     }
 }
-

@@ -21,24 +21,24 @@ public class AdoptionFormsController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addForm(@NotBlank(message = "Message cannot be empty") @RequestParam String message, @NotNull(message = "Adoption list id cannot be empty") @RequestParam Integer adoptionListId) throws IOException {
+    public ResponseEntity<?> addForm(@NotBlank(message = "Message is required") @RequestParam String message,
+                                     @NotNull(message = "Adoption listing id is required") @RequestParam Integer adoptionListId) throws IOException {
 
         Integer userId = RequestContext.getUserId();
 
         if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("info", "Unauthorized"));
+            return ResponseEntity.status(401).body(Map.of("info", "You must be logged in to do this"));
         }
 
         try {
-            if(repository.addForm(message, userId, adoptionListId))
-            {
-                return ResponseEntity.ok(Map.of("info", "Form created"));
+            if(repository.addForm(message, userId, adoptionListId)) {
+                return ResponseEntity.ok(Map.of("info", "Application submitted successfully"));
             }
 
-            return ResponseEntity.status(500).body(Map.of("info", "Form could not be created"));
+            return ResponseEntity.status(500).body(Map.of("info", "Something went wrong, please try again"));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(400).body(Map.of("info", "Bad request "));
+            return ResponseEntity.status(400).body(Map.of("info", "Something went wrong, please try again"));
         }
     }
 
@@ -47,7 +47,7 @@ public class AdoptionFormsController {
 
         Integer userId = RequestContext.getUserId();
         if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("info", "Unauthorized"));
+            return ResponseEntity.status(401).body(Map.of("info", "You must be logged in to do this"));
         }
 
         try {
@@ -57,27 +57,27 @@ public class AdoptionFormsController {
             }
             return ResponseEntity.ok(forms);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("info", "Internal server error"));
+            return ResponseEntity.status(500).body(Map.of("info", "Something went wrong, please try again"));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteFormById(@NotNull(message = "Id cannot be empty") @PathVariable Integer id) {
+    public ResponseEntity<?> deleteFormById(@NotNull(message = "Id is required") @PathVariable Integer id) {
 
         Integer userId = RequestContext.getUserId();
         if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("info", "Unauthorized"));
+            return ResponseEntity.status(401).body(Map.of("info", "You must be logged in to do this"));
         }
 
         try {
             if (repository.deleteFormById(id, userId)) {
-                return ResponseEntity.ok(Map.of("info", "Form deleted"));
+                return ResponseEntity.ok(Map.of("info", "Application withdrawn successfully"));
             } else {
-                return ResponseEntity.status(404).body(Map.of("info", "Not found"));
+                return ResponseEntity.status(404).body(Map.of("info", "Application not found"));
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("info", "DB error"));
+            return ResponseEntity.status(500).body(Map.of("info", "Something went wrong, please try again"));
         }
     }
 }
