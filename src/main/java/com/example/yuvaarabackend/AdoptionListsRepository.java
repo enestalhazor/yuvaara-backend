@@ -52,9 +52,8 @@ public class AdoptionListsRepository {
     }
 
     public List<Map<String, Object>> filterLists(String term) {
-        String sql = "SELECT * FROM adoption_lists WHERE species= ?";
-
-        return jdbcTemplate.queryForList(sql, term);
+        String sql = "SELECT * FROM adoption_lists WHERE LOWER(species) = ?";
+        return jdbcTemplate.queryForList(sql, term.toLowerCase());
     }
 
     public boolean deleteListById(Integer id, Integer userId) {
