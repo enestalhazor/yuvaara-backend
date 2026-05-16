@@ -227,8 +227,8 @@ public class UserController {
             }
 
             if (phone != null && !phone.isBlank()) {
-                if (!phone.matches("^\\+90 5\\d{2} \\d{3} \\d{4}$")) {
-                    return ResponseEntity.status(400).body(Map.of("info", "Invalid phone format. Use +90 5xx xxx xxxx"));
+                if (!phone.matches("^\\+905\\d{9}$")) {
+                    return ResponseEntity.status(400).body(Map.of("info", "Invalid phone format. Use +905XXXXXXXXX"));
                 }
             }
 
